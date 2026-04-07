@@ -19,5 +19,6 @@ func SetupRoutes(router *gin.Engine, taskHandler *handler.TaskHandler) {
 		protected.GET("/tasks/:id", taskHandler.GetTaskByID)
 		protected.PATCH("/tasks/:id", taskHandler.UpdateTask)
 		protected.DELETE("/tasks/:id", taskHandler.DeleteTask)
+		protected.POST("/tasks/:id/process", taskHandler.ProcessTask)
 	}
 }

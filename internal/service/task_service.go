@@ -3,6 +3,7 @@ package service
 import (
 	"go-repaso/internal/domain"
 	"go-repaso/internal/dto"
+	"go-repaso/internal/queue"
 	"go-repaso/internal/repository"
 )
 
@@ -12,14 +13,19 @@ type TaskService interface {
 	GetTaskByID(userID, taskID uint) (*domain.Task, error)
 	UpdateTask(userID, taskID uint, req dto.UpdateTaskRequest) (*domain.Task, error)
 	DeleteTask(userID, taskID uint) error
+	ProcessTask(userID, taskID uint) (*domain.Task, error)
 }
 
 type taskService struct {
-	repo repository.TaskRepository
+	repo  repository.TaskRepository
+	queue queue.TaskQueue
 }
 
-func NewTaskService(repo repository.TaskRepository) TaskService {
-	return &taskService{repo: repo}
+func NewTaskService(repo repository.TaskRepository, q queue.TaskQueue) TaskService {
+	return &taskService{
+		repo:  repo,
+		queue: q,
+	}
 }
 
 func isValidStatus(status domain.TaskStatus) bool {
@@ -108,4 +114,34 @@ func (s *taskService) DeleteTask(userID, taskID uint) error {
 	}
 
 	return s.repo.Delete(task)
+}
+
+func (s *taskService) ProcessTask(userID, taskID uint) (*domain.Task, error) {
+	task, err := s.repo.FindByIDAndUserID(taskID, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	if task.Status != domain.StatusPending && task.Status != domain.StatusFailed {
+		return nil, domain.ErrTaskCannotProcess
+	}
+
+	task.Status = domain.StatusQueued
+	task.Result = nil
+	task.ErrorMessage = nil
+
+	if err := s.repo.Update(task); err != nil {
+		return nil, err
+	}
+
+	if err := s.queue.Enqueue(task.ID); err != nil {
+		task.Status = domain.StatusFailed
+		msg := "failed to enqueue task"
+		task.ErrorMessage = &msg
+		_ = s.repo.Update(task)
+
+		return nil, domain.ErrTaskQueueIsFull
+	}
+
+	return task, nil
 }

@@ -3,6 +3,7 @@ package main
 import (
 	"go-repaso/internal/config"
 	"go-repaso/internal/handler"
+	"go-repaso/internal/queue"
 	"go-repaso/internal/repository"
 	"go-repaso/internal/routes"
 	"go-repaso/internal/service"
@@ -22,7 +23,12 @@ func main() {
 	db := config.ConnectDB()
 
 	taskRepo := repository.NewTaskRepository(db)
-	taskService := service.NewTaskService(taskRepo)
+
+	taskQueue := queue.NewTaskQueue(100)
+	taskWorker := queue.NewTaskWorker(taskRepo, taskQueue)
+	taskWorker.Start()
+
+	taskService := service.NewTaskService(taskRepo, taskQueue)
 	taskHandler := handler.NewTaskHandler(taskService)
 
 	// Framework para Apis HTTP

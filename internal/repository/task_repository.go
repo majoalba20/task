@@ -11,6 +11,7 @@ type TaskRepository interface {
 	Create(task *domain.Task) error
 	FindAllByUserID(userID uint) ([]domain.Task, error)
 	FindByIDAndUserID(id uint, userID uint) (*domain.Task, error)
+	FindByID(id uint) (*domain.Task, error)
 	Update(task *domain.Task) error
 	Delete(task *domain.Task) error
 }
@@ -51,4 +52,16 @@ func (r *taskRepository) Update(task *domain.Task) error {
 
 func (r *taskRepository) Delete(task *domain.Task) error {
 	return r.db.Delete(task).Error
+}
+
+func (r *taskRepository) FindByID(id uint) (*domain.Task, error) {
+	var task domain.Task
+	err := r.db.First(&task, id).Error
+	if errors.Is(err, gorm.ErrRecordNotFound) {
+		return nil, domain.ErrTaskNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &task, nil
 }

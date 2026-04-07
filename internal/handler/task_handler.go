@@ -142,6 +142,31 @@ func (h *TaskHandler) DeleteTask(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "task deleted successfully"})
 }
 
+func (h *TaskHandler) ProcessTask(c *gin.Context) {
+	userID, err := getUserID(c)
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+
+	taskID, err := strconv.ParseUint(c.Param("id"), 10, 32)
+	if err != nil {
+		handleError(c, domain.ErrInvalidTaskID)
+		return
+	}
+
+	task, err := h.service.ProcessTask(userID, uint(taskID))
+	if err != nil {
+		handleError(c, err)
+		return
+	}
+
+	c.JSON(http.StatusAccepted, gin.H{
+		"message": "task queued successfully",
+		"task":    task,
+	})
+}
+
 func handleError(c *gin.Context, err error) {
 	switch err {
 	case domain.ErrTaskNotFound:
@@ -150,6 +175,10 @@ func handleError(c *gin.Context, err error) {
 		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 	case domain.ErrUnauthorized:
 		c.JSON(http.StatusUnauthorized, gin.H{"error": err.Error()})
+	case domain.ErrTaskCannotProcess:
+		c.JSON(http.StatusConflict, gin.H{"error": err.Error()})
+	case domain.ErrTaskQueueIsFull:
+		c.JSON(http.StatusServiceUnavailable, gin.H{"error": err.Error()})
 	default:
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "internal server error"})
 	}
