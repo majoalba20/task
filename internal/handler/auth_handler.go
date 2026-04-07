@@ -95,14 +95,3 @@ func Login(c *gin.Context) {
 		"token": token,
 	})
 }
-
-// GET /me
-func Me(c *gin.Context) {
-	userID, _ := c.Get("userID")
-	email, _ := c.Get("email")
-
-	c.JSON(http.StatusOK, gin.H{
-		"user_id": userID,
-		"email":   email,
-	})
-}

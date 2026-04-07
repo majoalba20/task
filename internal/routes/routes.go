@@ -7,13 +7,17 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func SetupRoutes(router *gin.Engine) {
+func SetupRoutes(router *gin.Engine, taskHandler *handler.TaskHandler) {
 	router.POST("/register", handler.Register)
 	router.POST("/login", handler.Login)
 
 	protected := router.Group("/")
 	protected.Use(middleware.AuthMiddleware())
 	{
-		protected.GET("/me", handler.Me)
+		protected.POST("/tasks", taskHandler.CreateTask)
+		protected.GET("/tasks", taskHandler.GetTasks)
+		protected.GET("/tasks/:id", taskHandler.GetTaskByID)
+		protected.PATCH("/tasks/:id", taskHandler.UpdateTask)
+		protected.DELETE("/tasks/:id", taskHandler.DeleteTask)
 	}
 }

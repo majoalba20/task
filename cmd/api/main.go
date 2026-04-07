@@ -2,7 +2,10 @@ package main
 
 import (
 	"go-repaso/internal/config"
+	"go-repaso/internal/handler"
+	"go-repaso/internal/repository"
 	"go-repaso/internal/routes"
+	"go-repaso/internal/service"
 	"log"
 	"os"
 
@@ -16,11 +19,15 @@ func main() {
 		log.Println("No se pudo cargar .env, usando variables del sistema")
 	}
 
-	config.ConnectDB()
+	db := config.ConnectDB()
+
+	taskRepo := repository.NewTaskRepository(db)
+	taskService := service.NewTaskService(taskRepo)
+	taskHandler := handler.NewTaskHandler(taskService)
 
 	// Framework para Apis HTTP
 	router := gin.Default()
-	routes.SetupRoutes(router)
+	routes.SetupRoutes(router, taskHandler)
 
 	port := os.Getenv("PORT")
 	if port == "" {
