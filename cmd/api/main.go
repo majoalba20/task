@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"go-repaso/internal/config"
 	"go-repaso/internal/handler"
 	"go-repaso/internal/queue"
@@ -15,6 +16,11 @@ import (
 )
 
 func main() {
+	//repaso()
+	setup()
+}
+
+func setup() {
 	err := godotenv.Load()
 	if err != nil {
 		log.Println("No se pudo cargar .env, usando variables del sistema")
@@ -42,4 +48,32 @@ func main() {
 
 	log.Printf("Servidor corriendo en http://localhost:%s", port)
 	router.Run(":" + port)
+}
+
+func repaso() {
+	p := handler.Perro{Raza: "shit zu", Color: "negro"}
+	g := handler.Gato{Edad: 2}
+
+	handler.HacerSonido(p)
+	handler.HacerSonido(g)
+	fmt.Println("++++++++++++++++++++++++++++++")
+	handler.DataPerro(p)
+	fmt.Println("++++++++++++++++++++++++++++++")
+	handler.DeclaracionVariables()
+	fmt.Println("++++++++++++++++++++++++++++++")
+	handler.Punteros()
+	fmt.Println("++++++++++++++++++++++++++++++")
+	handler.GoRoutines()
+	fmt.Println("++++++++++++++++++++++++++++++")
+	handler.Channels()
+	fmt.Println("++++++++++++++++++++++++++++++")
+	handler.ContextCancelado()
+	handler.ContextTimeOut()
+	fmt.Println("++++++++++++++++++++++++++++++")
+	handler.ManejoError()
+	fmt.Println("++++++++++++++++++++++++++++++")
+	handler.Imprimir(45)
+	handler.Imprimir("Hola mundo")
+	fmt.Println("++++++++++++++++++++++++++++++")
+	handler.Defer()
 }
